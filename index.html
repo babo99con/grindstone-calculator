@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>숫돌 계산기</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --soft: #f9fafb;
+      --text: #17191f;
+      --muted: #6b7280;
+      --line: #d9dee7;
+      --line-strong: #abb3c2;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --green: #16a34a;
+      --teal: #0f9f8f;
+      --amber: #d97706;
+      --rose: #e11d48;
+      --shadow: 0 14px 38px rgba(20, 28, 44, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+    }
+
+    .side {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--soft);
+      white-space: nowrap;
+    }
+
+    .inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+      min-width: 0;
+    }
+
+    label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    label span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .input-wrap { position: relative; }
+
+    input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 0 46px 0 14px;
+      color: var(--text);
+      background: var(--panel);
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-soft);
+    }
+
+    .unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .btn {
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .main {
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .grid {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      padding: 16px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .metric-title {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .metric-value {
+      font-size: 25px;
+      line-height: 1.1;
+      font-weight: 850;
+      word-break: keep-all;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .good { color: var(--green); }
+    .bad { color: var(--rose); }
+
+    .panel { padding: 22px; }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .status {
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .status.good { background: #dcfce7; color: #166534; }
+    .status.bad { background: #ffe4e6; color: #be123c; }
+
+    .bars {
+      display: grid;
+      gap: 16px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr) 160px;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .bar-label {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .track {
+      height: 28px;
+      border-radius: 8px;
+      background: #eef0f4;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      transition: width 180ms ease, background-color 180ms ease;
+    }
+
+    .bar.cost { background: linear-gradient(90deg, var(--amber), #f59e0b); }
+    .bar.sale { background: linear-gradient(90deg, var(--blue), #38bdf8); }
+    .bar.profit.good { background: linear-gradient(90deg, var(--green), var(--teal)); }
+    .bar.profit.bad { background: linear-gradient(90deg, var(--rose), #fb7185); }
+
+    .bar-value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      background: var(--soft);
+      display: grid;
+      gap: 10px;
+    }
+
+    .item-name {
+      font-size: 14px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .item-price {
+      font-size: 22px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .item-sub {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .line-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .line:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .line span:first-child {
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .line span:last-child {
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    @media (max-width: 1040px) {
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .breakdown { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .side { border-right: 0; border-bottom: 1px solid var(--line); }
+      .bar-row { grid-template-columns: 1fr; gap: 8px; }
+      .bar-value { text-align: left; }
+    }
+
+    @media (max-width: 560px) {
+      .side, .main { padding: 18px; }
+      .summary, .breakdown { grid-template-columns: 1fr; }
+      .brand, .panel-head { align-items: flex-start; flex-direction: column; }
+      .metric-value { font-size: 23px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="side">
+      <div class="brand">
+        <h1>숫돌 계산기</h1>
+        <div class="pill">재료 10개씩</div>
+      </div>
+
+      <section class="inputs" aria-label="가격 입력">
+        <div class="field">
+          <label for="itemCrystal">최상급 아이템 결정 <span>1개값</span></label>
+          <div class="input-wrap">
+            <input id="itemCrystal" type="text" inputmode="numeric" autocomplete="off" value="0">
+            <span class="unit">메소</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="timeEssence">뒤틀린 시간의 정수 <span>1개값</span></label>
+          <div class="input-wrap">
+            <input id="timeEssence" type="text" inputmode="numeric" autocomplete="off" value="0">
+            <span class="unit">메소</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="spellEssence">상급 주문의 정수 <span>1개값</span></label>
+          <div class="input-wrap">
+            <input id="spellEssence" type="text" inputmode="numeric" autocomplete="off" value="0">
+            <span class="unit">메소</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="whetstonePrice">숫돌 <span>1개값</span></label>
+          <div class="input-wrap">
+            <input id="whetstonePrice" type="text" inputmode="numeric" autocomplete="off" value="0">
+            <span class="unit">메소</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="depositPrice">등록 보증금 <span>1회</span></label>
+          <div class="input-wrap">
+            <input id="depositPrice" type="text" inputmode="numeric" autocomplete="off" value="2,000">
+            <span class="unit">메소</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="feeRate">판매 수수료 <span>판매가 기준</span></label>
+          <div class="input-wrap">
+            <input id="feeRate" type="text" inputmode="decimal" autocomplete="off" value="5">
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveBtn" type="button">저장</button>
+          <button class="btn" id="resetBtn" type="button">초기화</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="main">
+      <div class="grid">
+        <section class="summary" aria-label="요약">
+          <div class="metric">
+            <div class="metric-title">제작 원가</div>
+            <div class="metric-value" id="totalCost">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">숫돌 판매가</div>
+            <div class="metric-value" id="salePrice">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">실수령액</div>
+            <div class="metric-value" id="netSalePrice">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">차액</div>
+            <div class="metric-value" id="profit">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">수익률</div>
+            <div class="metric-value" id="roi">0%</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>가격 비교</h2>
+            <div class="status" id="status">입력 대기</div>
+          </div>
+          <div class="bars">
+            <div class="bar-row">
+              <div class="bar-label">제작 원가</div>
+              <div class="track"><div class="bar cost" id="costBar"></div></div>
+              <div class="bar-value" id="costBarValue">0</div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label">숫돌 판매가</div>
+              <div class="track"><div class="bar sale" id="saleBar"></div></div>
+              <div class="bar-value" id="saleBarValue">0</div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label">실수령액</div>
+              <div class="track"><div class="bar sale" id="netSaleBar"></div></div>
+              <div class="bar-value" id="netSaleBarValue">0</div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label">차액</div>
+              <div class="track"><div class="bar profit" id="profitBar"></div></div>
+              <div class="bar-value" id="profitBarValue">0</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>재료 원가</h2>
+            <div class="pill">숫돌 1개 기준</div>
+          </div>
+          <div class="breakdown">
+            <div class="item">
+              <div class="item-name">최상급 아이템 결정</div>
+              <div class="item-price" id="itemCrystalCost">0</div>
+              <div class="item-sub">10개 사용</div>
+            </div>
+            <div class="item">
+              <div class="item-name">뒤틀린 시간의 정수</div>
+              <div class="item-price" id="timeEssenceCost">0</div>
+              <div class="item-sub">10개 사용</div>
+            </div>
+            <div class="item">
+              <div class="item-name">상급 주문의 정수</div>
+              <div class="item-price" id="spellEssenceCost">0</div>
+              <div class="item-sub">10개 사용</div>
+            </div>
+            <div class="item">
+              <div class="item-name">숫돌</div>
+              <div class="item-price" id="netSaleItem">0</div>
+              <div class="item-sub">수수료와 보증금 차감 후</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>세부 비율</h2>
+          </div>
+          <div class="line-list">
+            <div class="line"><span>등록 보증금</span><span id="depositCost">0</span></div>
+            <div class="line"><span>판매 수수료</span><span id="feeCost">0</span></div>
+            <div class="line"><span>판매 후 실수령액</span><span id="netSaleLine">0</span></div>
+            <div class="line"><span>판매가 대비 마진율</span><span id="marginRate">0%</span></div>
+            <div class="line"><span>원가 대비 수익률</span><span id="roiLine">0%</span></div>
+            <div class="line"><span>손익분기 판매가</span><span id="breakEven">0</span></div>
+            <div class="line"><span>원가 / 판매가 비율</span><span id="costRatio">0%</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "grindstone-calculator-values";
+    const fields = {
+      itemCrystal: document.getElementById("itemCrystal"),
+      timeEssence: document.getElementById("timeEssence"),
+      spellEssence: document.getElementById("spellEssence"),
+      whetstonePrice: document.getElementById("whetstonePrice"),
+      depositPrice: document.getElementById("depositPrice"),
+      feeRate: document.getElementById("feeRate")
+    };
+
+    const output = {
+      totalCost: document.getElementById("totalCost"),
+      salePrice: document.getElementById("salePrice"),
+      netSalePrice: document.getElementById("netSalePrice"),
+      profit: document.getElementById("profit"),
+      roi: document.getElementById("roi"),
+      status: document.getElementById("status"),
+      costBar: document.getElementById("costBar"),
+      saleBar: document.getElementById("saleBar"),
+      netSaleBar: document.getElementById("netSaleBar"),
+      profitBar: document.getElementById("profitBar"),
+      costBarValue: document.getElementById("costBarValue"),
+      saleBarValue: document.getElementById("saleBarValue"),
+      netSaleBarValue: document.getElementById("netSaleBarValue"),
+      profitBarValue: document.getElementById("profitBarValue"),
+      itemCrystalCost: document.getElementById("itemCrystalCost"),
+      timeEssenceCost: document.getElementById("timeEssenceCost"),
+      spellEssenceCost: document.getElementById("spellEssenceCost"),
+      netSaleItem: document.getElementById("netSaleItem"),
+      depositCost: document.getElementById("depositCost"),
+      feeCost: document.getElementById("feeCost"),
+      netSaleLine: document.getElementById("netSaleLine"),
+      marginRate: document.getElementById("marginRate"),
+      roiLine: document.getElementById("roiLine"),
+      breakEven: document.getElementById("breakEven"),
+      costRatio: document.getElementById("costRatio")
+    };
+
+    function parsePrice(value) {
+      const clean = String(value).replace(/[^\d]/g, "");
+      return clean ? Number(clean) : 0;
+    }
+
+    function parseRate(value) {
+      const clean = String(value).replace(/[^\d.]/g, "");
+      const normalized = clean.replace(/(\..*)\./g, "$1");
+      return normalized ? Number(normalized) : 0;
+    }
+
+    function formatNumber(value) {
+      return Math.round(value).toLocaleString("ko-KR");
+    }
+
+    function formatPercent(value) {
+      if (!Number.isFinite(value)) return "0%";
+      const rounded = Math.round(value * 10) / 10;
+      return `${rounded.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}%`;
+    }
+
+    function setPriceInput(input, value) {
+      input.value = value ? formatNumber(value) : "0";
+    }
+
+    function setRateInput(input, value) {
+      input.value = value ? String(value) : "0";
+    }
+
+    function getValues() {
+      return Object.fromEntries(Object.entries(fields).map(([key, input]) => {
+        const parser = key === "feeRate" ? parseRate : parsePrice;
+        return [key, parser(input.value)];
+      }));
+    }
+
+    function setStatus(profit, totalCost, salePrice) {
+      output.status.className = "status";
+      output.profit.classList.remove("good", "bad");
+      output.roi.classList.remove("good", "bad");
+      output.profitBar.classList.remove("good", "bad");
+
+      if (!totalCost && !salePrice) {
+        output.status.textContent = "입력 대기";
+        return;
+      }
+
+      if (profit > 0) {
+        output.status.textContent = "이득";
+        output.status.classList.add("good");
+        output.profit.classList.add("good");
+        output.roi.classList.add("good");
+        output.profitBar.classList.add("good");
+      } else if (profit < 0) {
+        output.status.textContent = "손해";
+        output.status.classList.add("bad");
+        output.profit.classList.add("bad");
+        output.roi.classList.add("bad");
+        output.profitBar.classList.add("bad");
+      } else {
+        output.status.textContent = "본전";
+      }
+    }
+
+    function update() {
+      const values = getValues();
+      const itemCrystalCost = values.itemCrystal * 10;
+      const timeEssenceCost = values.timeEssence * 10;
+      const spellEssenceCost = values.spellEssence * 10;
+      const totalCost = itemCrystalCost + timeEssenceCost + spellEssenceCost;
+      const salePrice = values.whetstonePrice;
+      const depositCost = values.depositPrice;
+      const feeRate = values.feeRate;
+      const feeCost = Math.floor(salePrice * (feeRate / 100));
+      const netSalePrice = salePrice - feeCost - depositCost;
+      const profit = netSalePrice - totalCost;
+      const roi = totalCost ? (profit / totalCost) * 100 : 0;
+      const marginRate = salePrice ? (profit / salePrice) * 100 : 0;
+      const costRatio = salePrice ? (totalCost / salePrice) * 100 : 0;
+      const breakEvenSalePrice = feeRate >= 100 ? 0 : Math.ceil((totalCost + depositCost) / (1 - feeRate / 100));
+      const maxBar = Math.max(totalCost, salePrice, netSalePrice, Math.abs(profit), 1);
+
+      output.totalCost.textContent = formatNumber(totalCost);
+      output.salePrice.textContent = formatNumber(salePrice);
+      output.netSalePrice.textContent = formatNumber(netSalePrice);
+      output.profit.textContent = formatNumber(profit);
+      output.roi.textContent = formatPercent(roi);
+      output.costBarValue.textContent = formatNumber(totalCost);
+      output.saleBarValue.textContent = formatNumber(salePrice);
+      output.netSaleBarValue.textContent = formatNumber(netSalePrice);
+      output.profitBarValue.textContent = formatNumber(profit);
+      output.itemCrystalCost.textContent = formatNumber(itemCrystalCost);
+      output.timeEssenceCost.textContent = formatNumber(timeEssenceCost);
+      output.spellEssenceCost.textContent = formatNumber(spellEssenceCost);
+      output.netSaleItem.textContent = formatNumber(netSalePrice);
+      output.depositCost.textContent = formatNumber(depositCost);
+      output.feeCost.textContent = formatNumber(feeCost);
+      output.netSaleLine.textContent = formatNumber(netSalePrice);
+      output.marginRate.textContent = formatPercent(marginRate);
+      output.roiLine.textContent = formatPercent(roi);
+      output.breakEven.textContent = feeRate >= 100 ? "-" : formatNumber(breakEvenSalePrice);
+      output.costRatio.textContent = formatPercent(costRatio);
+
+      output.costBar.style.width = `${(totalCost / maxBar) * 100}%`;
+      output.saleBar.style.width = `${(salePrice / maxBar) * 100}%`;
+      output.netSaleBar.style.width = `${(Math.max(netSalePrice, 0) / maxBar) * 100}%`;
+      output.profitBar.style.width = `${(Math.abs(profit) / maxBar) * 100}%`;
+
+      setStatus(profit, totalCost, salePrice);
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getValues()));
+    }
+
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        Object.entries(fields).forEach(([key, input]) => {
+          if (key === "feeRate") {
+            setRateInput(input, Number(saved[key]) || 5);
+          } else if (key === "depositPrice") {
+            setPriceInput(input, Number(saved[key]) || 2000);
+          } else {
+            setPriceInput(input, Number(saved[key]) || 0);
+          }
+        });
+      } catch {
+        update();
+      }
+    }
+
+    Object.values(fields).forEach((input) => {
+      input.addEventListener("focus", () => input.select());
+      input.addEventListener("input", () => {
+        if (input.id === "feeRate") {
+          setRateInput(input, parseRate(input.value));
+        } else {
+          setPriceInput(input, parsePrice(input.value));
+        }
+        update();
+      });
+      input.addEventListener("blur", save);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", save);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      Object.entries(fields).forEach(([key, input]) => {
+        if (key === "depositPrice") {
+          setPriceInput(input, 2000);
+        } else if (key === "feeRate") {
+          setRateInput(input, 5);
+        } else {
+          setPriceInput(input, 0);
+        }
+      });
+      save();
+      update();
+    });
+
+    load();
+    update();
+  </script>
+</body>
+</html>
