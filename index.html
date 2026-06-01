@@ -1,4 +1,9 @@
 <!doctype html>
+<!--
+  숫돌 계산기
+  Copyright (c) 2026 babo99con
+  Licensed under the MIT License.
+-->
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -343,6 +348,14 @@
       text-align: right;
     }
 
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+      padding: 4px 0 2px;
+    }
+
     @media (max-width: 1040px) {
       .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .breakdown { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -524,6 +537,10 @@
             <div class="line"><span>원가 / 판매가 비율</span><span id="costRatio">0%</span></div>
           </div>
         </section>
+
+        <footer class="footer">
+          Copyright (c) 2026 babo99con. Licensed under the MIT License.
+        </footer>
       </div>
     </section>
   </main>
